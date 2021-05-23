@@ -1,6 +1,9 @@
 # pallet-kitties
 - Calls
   - `create`
+  - `transfer`
+    - `to: AccountId`
+    - `kitty_id: KittyIndex`
 - Storages
   - `Kitties: double_map AccountId, u32 => Option<Kitty>`
   - `NextKittyId: u32`
@@ -11,3 +14,7 @@
     - `owner: AccountId`
     - `kitty_id: u32`
     - `kitty: Kitty`
+  - `KittyTransferred`
+    - `from: AccountId`
+    - `to: AccountId`
+    - `kitty_id: KittyIndex`
