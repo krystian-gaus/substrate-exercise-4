@@ -73,30 +73,16 @@ decl_module! {
 		pub fn create(origin) {
 			let sender = ensure_signed(origin)?;
 
-			// TODO: refactor this method to use
-			// `Self::random_value` and `Self::get_next_kitty_id`
-			// to simplify the implementation
+			let kitty_id = Self::get_next_kitty_id()?;
 
-			NextKittyId::try_mutate(|next_id| -> DispatchResult {
-				let current_id = *next_id;
-				*next_id = next_id.checked_add(1).ok_or(Error::<T>::KittiesIdOverflow)?;
+			let dna = Self::random_value(&sender);
 
-				let payload = (
-					<pallet_randomness_collective_flip::Module<T> as Randomness<T::Hash>>::random_seed(),
-					&sender,
-					<frame_system::Module<T>>::extrinsic_index(),
-				);
-				let dna = payload.using_encoded(blake2_128);
+			// Create and store kitty
+			let kitty = Kitty(dna);
+			Kitties::<T>::insert(&sender, kitty_id, &kitty);
 
-				// Create and store kitty
-				let kitty = Kitty(dna);
-				Kitties::<T>::insert(&sender, current_id, kitty.clone());
-
-				// Emit event
-				Self::deposit_event(RawEvent::KittyCreated(sender, current_id, kitty));
-
-				Ok(())
-			})?;
+			// Emit event
+			Self::deposit_event(RawEvent::KittyCreated(sender, kitty_id, kitty));
 		}
 
 		/// Breed kitties
@@ -131,15 +117,7 @@ decl_module! {
 }
 
 pub fn combine_dna(dna1: u8, dna2: u8, selector: u8) -> u8 {
-	// TODO: finish this implementation
-	// selector[bit_index] == 0 -> use dna1[bit_index]
-	// selector[bit_index] == 1 -> use dna2[bit_index]
-	// e.g.
-	// selector = 0b00000001
-	// dna1		= 0b10101010
-	// dna2		= 0b00001111
-	// result	= 0b10101011
-	0
+	(!selector & dna1) | (selector & dna2)
 }
 
 impl<T: Config> Module<T> {
@@ -152,7 +130,11 @@ impl<T: Config> Module<T> {
 	}
 
 	fn random_value(sender: &T::AccountId) -> [u8; 16] {
-		// TODO: finish this implementation
-		Default::default()
+		let payload = (
+			<pallet_randomness_collective_flip::Module<T> as Randomness<T::Hash>>::random_seed(),
+			&sender,
+			<frame_system::Module<T>>::extrinsic_index(),
+		);
+		payload.using_encoded(blake2_128)
 	}
 }
