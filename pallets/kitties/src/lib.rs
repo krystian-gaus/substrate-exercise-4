@@ -22,6 +22,7 @@ pub enum KittyGender {
 
 impl Kitty {
 	pub fn gender(&self) -> KittyGender {
+		// take the first byte of the DNA and check wether it's even or not
 		if self.0[0] % 2 == 0 {
 			KittyGender::Male
 		} else {
@@ -89,6 +90,7 @@ decl_module! {
 		#[weight = 1000]
 		pub fn breed(origin, kitty_id_1: u32, kitty_id_2: u32) {
 			let sender = ensure_signed(origin)?;
+			// will fail if IDs are invalid or sender is not the owner of the kitties 
 			let kitty1 = Self::kitties(&sender, kitty_id_1).ok_or(Error::<T>::InvalidKittyId)?;
 			let kitty2 = Self::kitties(&sender, kitty_id_2).ok_or(Error::<T>::InvalidKittyId)?;
 
@@ -123,7 +125,11 @@ pub fn combine_dna(dna1: u8, dna2: u8, selector: u8) -> u8 {
 impl<T: Config> Module<T> {
 	fn get_next_kitty_id() -> sp_std::result::Result<u32, DispatchError> {
 		NextKittyId::try_mutate(|next_id| -> sp_std::result::Result<u32, DispatchError> {
-			let current_id = *next_id;
+			let current_id = *next_id; // dereference next_id
+			// checked_add is an option
+			// ok_or will convert an option into a result: if sum is a number everything is fine, else return an error
+			// ? will do early return for the result and will return an error into a DispatchError
+			// because of the dereferencing next_id won't be written into the storage immediately, it will be written after closure is finished
 			*next_id = next_id.checked_add(1).ok_or(Error::<T>::KittiesIdOverflow)?;
 			Ok(current_id)
 		})
