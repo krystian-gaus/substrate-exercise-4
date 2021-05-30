@@ -3,7 +3,7 @@
 use codec::{Encode, Decode};
 use frame_support::{
 	decl_module, decl_storage, decl_event, decl_error, ensure, StorageValue, StorageDoubleMap,
-	traits::Randomness, RuntimeDebug, dispatch::{DispatchError, DispatchResult},
+	traits::Randomness, RuntimeDebug, dispatch::{DispatchError},
 };
 use sp_io::hashing::blake2_128;
 use frame_system::ensure_signed;
